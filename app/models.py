@@ -74,7 +74,6 @@ class User(UserMixin, db.Model):
     last_seen = db.Column(db.DateTime(), default=datetime.utcnow)
     avatar_hash = db.Column(db.String(32))
     posts = db.relationship('Post', backref='author', lazy='dynamic')
-    nodes = db.relationship('Node', backref='author', lazy='dynamic')
     followed = db.relationship('Follow',
                                foreign_keys=[Follow.follower_id],
                                backref=db.backref('follower', lazy='joined'),
@@ -261,7 +260,6 @@ class Post(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     comments = db.relationship('Comment', backref='post', lazy='dynamic')
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    node_id = db.Column(db.Integer, db.ForeignKey('nodes.id'))
 
     @staticmethod
     def generate_fake(count=100):
@@ -317,13 +315,3 @@ db.event.listen(Comment.body, 'set', Comment.on_changed_body)
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
-
-
-class Node(db.Model):
-    __tablename__ = 'nodes'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Text)
-    intro = db.Column(db.Text)
-    create_time = db.Column(db.DateTime, default=datetime.now)
-    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    posts = db.relationship('Post', backref='node', lazy='dynamic')
