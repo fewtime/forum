@@ -11,7 +11,7 @@
         <p>
             {% if user.name %}{{ user.name }}{% endif %}
             {% if user.location %}
-            From <a href="http://maps.google.com/?q={{ user.location }}">
+            来自 <a href="http://maps.google.com/?q={{ user.location }}">
             {{ user.location }}
             </a>
             {% endif %}
@@ -31,11 +31,11 @@
         {% endif %}
 
         <p>
-            Member since {{ moment(user.member_since).format('L') }}.
-            Last seen {{ moment(user.last_seen).fromNow() }}.
+            注册日期：{{ moment(user.member_since).format('L') }}.
+            上次登录日期：{{ moment(user.last_seen).fromNow() }}.
         </p>
 
-        <p>{{ user.posts.count() }} blog posts. {{ user.comments.count() }} comments.</p>
+        <p>发布了 {{ user.posts.count() }} 篇文章. 发布了 {{ user.comments.count() }} 条评论.</p>
 
         <p>
             {% if current_user.can(Permission.FOLLOW) and user != current_user %}
@@ -58,14 +58,14 @@
 
         <p>
             {% if user == current_user %}
-            <a class="btn btn-default" href="{{ url_for('.edit_profile') }}">Edit Profile</a>
+            <a class="btn btn-default" href="{{ url_for('.edit_profile') }}">修改资料</a>
             {% endif %}
             {% if current_user.is_administrator() %}
-            <a class="btn btn-danger" href="{{ url_for('.edit_profile_admin', id=user.id) }}">Edit Profile [Admin]</a>
+            <a class="btn btn-danger" href="{{ url_for('.edit_profile_admin', id=user.id) }}">修改资料[管理员]</a>
             {% endif %}
         </p>
     </div>
 </div>
-<h3>Posts by {{ user.username }}</h3>
+<h3>由 {{ user.username }} 发布的文章</h3>
 {% include '_posts.html' %}
 {% endblock %}
