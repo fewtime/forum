@@ -99,7 +99,7 @@ def moderate():
     comments = pagination.items
     for comment in comments:
         print(comment.post_id)
-    return render_template('moderate.html', comments=comments,
+    return render_template('manage/moderate.html', comments=comments,
                            pagination=pagination, page=page)
 
 
