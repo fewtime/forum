@@ -58,6 +58,31 @@ class Follow(db.Model):
                             primary_key=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
+    @staticmethod
+    def generate_fake(count=1000):
+        from sqlalchemy.exc import IntegrityError
+        from random import seed, randint
+        import forgery_py
+
+        seed()
+
+        user_count = User.query.count()
+        for i in range(count):
+            follower_id = randint(1, user_count)
+            followed_id = randint(1, user_count)
+            if follower_id == followed_id:
+                count += 1
+                continue
+
+            f = Follow(follower_id=follower_id,
+                       followed_id=followed_id,
+                       timestamp=forgery_py.date.date(True))
+            db.session.add(f)
+            try:
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -74,6 +99,7 @@ class User(UserMixin, db.Model):
     last_seen = db.Column(db.DateTime(), default=datetime.utcnow)
     avatar_hash = db.Column(db.String(32))
     posts = db.relationship('Post', backref='author', lazy='dynamic')
+    nodes = db.relationship('Node', backref='author', lazy='dynamic')
     followed = db.relationship('Follow',
                                foreign_keys=[Follow.follower_id],
                                backref=db.backref('follower', lazy='joined'),
@@ -250,6 +276,36 @@ class AnnoymousUser(AnonymousUserMixin):
 login_manager.anonymous_user = AnnoymousUser
 
 
+class Node(db.Model):
+    __tablename__ = 'nodes'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text)
+    intro = db.Column(db.Text)
+    create_time = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    posts = db.relationship('Post', backref='node', lazy='dynamic')
+
+    @staticmethod
+    def generate_fake(count=10):
+        from sqlalchemy.exc import IntegrityError
+        from random import seed, randint
+        import forgery_py
+
+        seed()
+
+        user_count = User.query.count()
+        for i in range(count):
+            u = User.query.offset(randint(0, user_count-1)).first()
+            n = Node(name=forgery_py.name.company_name(),
+                     intro=forgery_py.currency.description(),
+                     author=u)
+            db.session.add(n)
+            try:
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+
+
 class Post(db.Model):
     __tablename__ = 'posts'
     id = db.Column(db.Integer, primary_key=True)
@@ -258,8 +314,9 @@ class Post(db.Model):
     body_html = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    node_id = db.Column(db.Integer, db.ForeignKey('nodes.id'))
     comments = db.relationship('Comment', backref='post', lazy='dynamic')
-    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    count = db.Column(db.Integer, default=0)
 
     @staticmethod
     def generate_fake(count=100):
@@ -268,12 +325,15 @@ class Post(db.Model):
 
         seed()
         user_count = User.query.count()
+        node_count = Node.query.count()
         for i in range(count):
             u = User.query.offset(randint(0, user_count-1)).first()
+            n = Node.query.offset(randint(0, node_count-1)).first()
             p = Post(title=forgery_py.lorem_ipsum.sentence(),
                      body=forgery_py.lorem_ipsum.sentences(randint(1, 3)),
                      timestamp=forgery_py.date.date(True),
-                     author=u)
+                     count=randint(0, user_count-1),
+                     author=u, node=n)
             db.session.add(p)
             db.session.commit()
 
@@ -299,6 +359,24 @@ class Comment(db.Model):
     disabled = db.Column(db.Boolean)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
+
+    @staticmethod
+    def generate_fake(count=1000):
+        from random import seed, randint
+        import forgery_py
+
+        seed()
+        user_count = User.query.count()
+        post_count = Post.query.count()
+        for i in range(count):
+            u = User.query.offset(randint(0, user_count-1)).first()
+            p = Post.query.offset(randint(0, post_count-1)).first()
+            c = Comment(body=forgery_py.lorem_ipsum.sentences(randint(1, 3)),
+                        timestamp=forgery_py.date.date(True),
+                        disabled=False,
+                        author=u, post=p)
+            db.session.add(c)
+            db.session.commit()
 
     @staticmethod
     def on_changed_body(target, value, oldvalue, initiator):

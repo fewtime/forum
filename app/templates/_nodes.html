@@ -1,0 +1,26 @@
+<ul class="nav nodes">
+    <span class="nodes-title">节点</span>
+    <li {% if not show_followed and not nodename and not top and not new %} class="active" {% endif %}>
+        <a href="{{ url_for('.show_all') }}">全部</a>
+    </li>
+    <li {% if new %} class="active" {% endif %}>
+        <a href="{{ url_for('.new_posts') }}">最新</a>
+    </li>
+    <li {% if top %} class="active" {% endif %}>
+        <a href="{{ url_for('.top_posts') }}">热门</a>
+    </li>
+    {% if current_user.is_authenticated %}
+    <li {% if show_followed %}class="active" {% endif %}>
+        <a href="{{ url_for('.show_followed') }}">Followers</a>
+    </li>
+    {% endif %}
+    <span class="line"></span>
+    {% for node in nodes %}
+    <li {% if nodename == node.name %} class="active" {% endif %}>
+        <a href="{{ url_for('.node', nodename=node.name) }}">
+            {{ node.name }}
+            <span class="badge pull-right">{{ node.posts.count() }}</span>
+        </a>
+    </li>
+    {% endfor %}
+</ul>

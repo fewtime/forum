@@ -73,10 +73,10 @@ div.comment-form {
     margin: 16px 0px 16px 32px;
 }
 div.pagination {
-    width: 100%;
-    text-align: right;
+    display: block;
     padding: 0px;
     margin: 0px;
+    margin-right: 420px;
 }
 div.flask-pagedown-preview {
     margin: 10px 0px 10px 0px;
@@ -103,4 +103,49 @@ div.flask-pagedown-preview h3 {
 }
 .table.followers tr {
     border-bottom: 1px solid #e0e0e0;
+}
+
+aside {
+    display: block;
+    float: right;
+    width: 350px;
+}
+
+main {
+    margin-right: 420px;
+}
+
+
+.nodes li.active {
+    background-color: #eee;
+}
+
+a.new-post-button {
+    display: block;
+    width: 350px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    border: 1px solid #337ab7;
+    border-radius: 10px;
+    text-decoration: none;
+    margin-bottom: 10px;
+}
+
+a.new-post-button:hover {
+    background: #337ab7;
+    color: #fff;
+    transition: 0.4s ease-in-out;
+}
+
+.nodes .nodes-title {
+    text-align: center;
+    display: block;
+    padding: 10px 20px;
+}
+
+.nodes .line {
+    display: block;
+    width: 100%;
+    border-top: 1px solid #000;
 }

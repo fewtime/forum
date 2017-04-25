@@ -31,11 +31,19 @@
                 {% endif %}
             </ul>
             <div class="nav navbar-nav navbar-right">
-                {% if current_user.can(Permission.MODERATE_COMMENTS) %}
-                <li>
-                    <a href="{{ url_for('main.moderate') }}">管理评论</a>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        管理 <b class="caret"></b>
+                    </a>
+                    <ul class="dropdown-menu">
+                        {% if current_user.can(Permission.FOLLOW) %}
+                        <li><a href="{{ url_for('.followers', username=current_user.username) }}">关注的人</a></li>
+                        {% endif %}
+                        {% if current_user.can(Permission.MODERATE_COMMENTS) %}
+                        <li><a href="{{ url_for('main.moderate') }}">管理评论</a></li>
+                        {% endif %}
+                    </ul>
                 </li>
-                {% endif %}
                 {% if current_user.is_authenticated %}
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">

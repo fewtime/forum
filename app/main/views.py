@@ -5,20 +5,12 @@ from . import main
 from .forms import EditProfileForm, EditProfileAdminForm, PostForm, \
     CommentForm
 from .. import db
-from ..models import User, Role, Permission, Post, Comment
+from ..models import User, Role, Permission, Post, Comment, Node
 from ..decorators import admin_required, permission_required
 
 
 @main.route('/', methods=['GET', 'POST'])
 def index():
-    form = PostForm()
-    if current_user.can(Permission.WRITE_ARTICLES) and \
-       form.validate_on_submit():
-        post = Post(title=form.title.data,
-                    body=form.body.data,
-                    author=current_user._get_current_object())
-        db.session.add(post)
-        return redirect(url_for('.index'))
     page = request.args.get('page', 1, type=int)
     show_followed = False
     if current_user.is_authenticated:
@@ -31,8 +23,59 @@ def index():
         page, per_page=current_app.config['FORUM_POSTS_PER_PAGE'],
         error_out=False)
     posts = pagination.items
-    return render_template('index.html', form=form, posts=posts,
-                           show_followed=show_followed, pagination=pagination)
+    nodes = Node.query.order_by(Node.name).all()
+    return render_template('index.html', posts=posts, nodes=nodes,
+                           nodename=None, top=False, new=False,
+                           show_followed=show_followed,
+                           pagination=pagination)
+
+
+@main.route('/newest-list')
+def new_posts():
+    page = request.args.get('page', 1, type=int)
+    show_followed = False
+    pagination = Post.query.order_by(Post.timestamp.desc()).paginate(
+        page, per_page=current_app.config['FORUM_POSTS_PER_PAGE'],
+        error_out=False)
+    posts = pagination.items
+    nodes = Node.query.order_by(Node.name).all()
+    return render_template('index.html', posts=posts, nodes=nodes,
+                           nodename=None, top=False, new=True,
+                           show_followed=show_followed,
+                           pagination=pagination)
+
+
+@main.route('/top-list')
+def top_posts():
+    page = request.args.get('page', 1, type=int)
+    show_followed = False
+    pagination = Post.query.order_by(Post.count.desc()).paginate(
+        page, per_page=current_app.config['FORUM_POSTS_PER_PAGE'],
+        error_out=False)
+    posts = pagination.items
+    nodes = Node.query.order_by(Node.name).all()
+    return render_template('index.html', posts=posts, nodes=nodes,
+                           nodename=None, top=True, new=False,
+                           show_followed=show_followed,
+                           pagination=pagination)
+
+
+@main.route('/node/<nodename>')
+def node(nodename):
+    page = request.args.get('page', 1, type=int)
+    show_followed = False
+    node = Node.query.filter_by(name=nodename).first()
+    if node is None:
+        abort(404)
+    pagination = node.posts.order_by(Post.timestamp.desc()).paginate(
+        page, per_page=current_app.config['FORUM_POSTS_PER_PAGE'],
+        error_out=False)
+    posts = pagination.items
+    nodes = Node.query.order_by(Node.name).all()
+    return render_template('index.html', posts=posts, nodes=nodes,
+                           nodename=nodename, top=False, new=False,
+                           show_followed=show_followed,
+                           pagination=pagination)
 
 
 @main.route('/user/<username>')
@@ -89,6 +132,9 @@ def edit_profile_admin(id):
 @main.route('/post/<int:id>', methods=['GET', 'POST'])
 def post(id):
     post = Post.query.get_or_404(id)
+    post.count += 1
+    db.session.add(post)
+
     form = CommentForm()
     if form.validate_on_submit():
         comment = Comment(body=form.body.data,
@@ -105,7 +151,7 @@ def post(id):
         page, per_page=current_app.config['FORUM_COMMENTS_PER_PAGE'],
         error_out=False)
     comments = pagination.items
-    return render_template('post.html', posts=[post], form=form,
+    return render_template('post.html', post=post, posts=[post], form=form,
                            comments=comments, pagination=pagination)
 
 
@@ -174,7 +220,7 @@ def followers(username):
                for item in pagination.items]
     return render_template('followers.html', user=user, title="Followers of",
                            endpoint='.followers', pagination=pagination,
-                           follows=follows)
+                           follows=follows, followed=False)
 
 
 @main.route('/followed-by/<username>')
@@ -189,9 +235,10 @@ def followed_by(username):
         error_out=False)
     follows = [{'user': item.followed, 'timestamp': item.timestamp}
                for item in pagination.items]
+    print(follows)
     return render_template('followers.html', user=user, title="Followed by",
                            endpoint='.followed_by', pagination=pagination,
-                           follows=follows)
+                           follows=follows, followed=True)
 
 
 @main.route('/all')
@@ -243,3 +290,17 @@ def moderate_disable(id):
     db.session.add(comment)
     return redirect(url_for('.moderate',
                             page=request.args.get('page', 1, type=int)))
+
+
+@main.route('/new-post', methods=['GET', 'POST'])
+def new_post():
+    form = PostForm()
+    if current_user.can(Permission.WRITE_ARTICLES) and \
+       form.validate_on_submit():
+        post = Post(title=form.title.data,
+                    body=form.body.data,
+                    node=Node.query.get(form.node.data),
+                    author=current_user._get_current_object())
+        db.session.add(post)
+        return redirect(url_for('.index'))
+    return render_template('new_post.html', form=form)
