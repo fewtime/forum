@@ -2,8 +2,8 @@ from flask import render_template, redirect, abort, flash, url_for, \
     request, current_app, make_response
 from flask_login import login_required, current_user
 from . import main
-from .forms import EditProfileForm, EditProfileAdminForm, PostForm, \
-    CommentForm
+from .forms import EditProfileForm, EditProfileAdminForm, \
+    CommentForm, PostForm
 from .. import db
 from ..models import User, Role, Permission, Post, Comment, Node
 from ..decorators import admin_required, permission_required
@@ -155,25 +155,6 @@ def post(id):
                            comments=comments, pagination=pagination)
 
 
-@main.route('/edit/<int:id>', methods=['GET', 'POST'])
-@login_required
-def edit(id):
-    post = Post.query.get_or_404(id)
-    if current_user != post.author and \
-       not current_user.can(Permission.ADMINISTER):
-        abort(403)
-    form = PostForm()
-    if form.validate_on_submit():
-        post.title = form.title.data
-        post.body = form.body.data
-        db.session.add(post)
-        flash(u'你的帖子已经发布')
-        return redirect(url_for('.post', id=post.id))
-    form.title.data = post.title
-    form.body.data = post.body
-    return render_template('edit_post.html', form=form)
-
-
 @main.route('/follow/<username>')
 @login_required
 @permission_required(Permission.FOLLOW)
@@ -218,7 +199,7 @@ def followers(username):
         error_out=False)
     follows = [{'user': item.follower, 'timestamp': item.timestamp}
                for item in pagination.items]
-    return render_template('followers.html', user=user, title="Followers of",
+    return render_template('followers.html', user=user, title=u"你的粉丝",
                            endpoint='.followers', pagination=pagination,
                            follows=follows, followed=False)
 
@@ -235,8 +216,7 @@ def followed_by(username):
         error_out=False)
     follows = [{'user': item.followed, 'timestamp': item.timestamp}
                for item in pagination.items]
-    print(follows)
-    return render_template('followers.html', user=user, title="Followed by",
+    return render_template('followers.html', user=user, title=u"关注的人",
                            endpoint='.followed_by', pagination=pagination,
                            follows=follows, followed=True)
 
@@ -255,41 +235,6 @@ def show_followed():
     resp = make_response(redirect(url_for('.index')))
     resp.set_cookie('show_followed', '1', max_age=30*(24*60*60))
     return resp
-
-
-@main.route('/moderate')
-@login_required
-@permission_required(Permission.MODERATE_COMMENTS)
-def moderate():
-    page = request.args.get('page', 1, type=int)
-    pagination = Comment.query.order_by(Comment.timestamp.desc()).paginate(
-        page, per_page=current_app.config['FORUM_FOLLOWERS_PER_PAGE'],
-        error_out=False)
-    comments = pagination.items
-    return render_template('moderate.html', comments=comments,
-                           pagination=pagination, page=page)
-
-
-@main.route('/moderate/enable/<int:id>')
-@login_required
-@permission_required(Permission.MODERATE_COMMENTS)
-def moderate_enable(id):
-    comment = Comment.query.get_or_404(id)
-    comment.disabled = False
-    db.session.add(comment)
-    return redirect(url_for('.moderate',
-                            page=request.args.get('page', 1, type=int)))
-
-
-@main.route('/moderate/disable/<int:id>')
-@login_required
-@permission_required(Permission.MODERATE_COMMENTS)
-def moderate_disable(id):
-    comment = Comment.query.get_or_404(id)
-    comment.disabled = True
-    db.session.add(comment)
-    return redirect(url_for('.moderate',
-                            page=request.args.get('page', 1, type=int)))
 
 
 @main.route('/new-post', methods=['GET', 'POST'])

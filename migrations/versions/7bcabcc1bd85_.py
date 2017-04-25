@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 1f3273c7b850
+Revision ID: 7bcabcc1bd85
 Revises: 
-Create Date: 2017-04-24 11:42:16.777732
+Create Date: 2017-04-25 23:25:41.190058
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '1f3273c7b850'
+revision = '7bcabcc1bd85'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -57,11 +57,13 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.Text(), nullable=True),
     sa.Column('intro', sa.Text(), nullable=True),
-    sa.Column('create_time', sa.DateTime(), nullable=True),
+    sa.Column('timestamp', sa.DateTime(), nullable=True),
     sa.Column('author_id', sa.Integer(), nullable=True),
+    sa.Column('disabled', sa.Boolean(), nullable=True),
     sa.ForeignKeyConstraint(['author_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_nodes_timestamp'), 'nodes', ['timestamp'], unique=False)
     op.create_table('posts',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('title', sa.Text(), nullable=True),
@@ -70,6 +72,8 @@ def upgrade():
     sa.Column('timestamp', sa.DateTime(), nullable=True),
     sa.Column('author_id', sa.Integer(), nullable=True),
     sa.Column('node_id', sa.Integer(), nullable=True),
+    sa.Column('count', sa.Integer(), nullable=True),
+    sa.Column('disabled', sa.Boolean(), nullable=True),
     sa.ForeignKeyConstraint(['author_id'], ['users.id'], ),
     sa.ForeignKeyConstraint(['node_id'], ['nodes.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -97,6 +101,7 @@ def downgrade():
     op.drop_table('comments')
     op.drop_index(op.f('ix_posts_timestamp'), table_name='posts')
     op.drop_table('posts')
+    op.drop_index(op.f('ix_nodes_timestamp'), table_name='nodes')
     op.drop_table('nodes')
     op.drop_table('follows')
     op.drop_index(op.f('ix_users_username'), table_name='users')

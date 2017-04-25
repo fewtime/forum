@@ -35,7 +35,7 @@
             上次登录日期：{{ moment(user.last_seen).fromNow() }}.
         </p>
 
-        <p>发布了 {{ user.posts.count() }} 篇文章. 发布了 {{ user.comments.count() }} 条评论.</p>
+        <p>发布过 {{ user.posts.count() }} 篇文章. 发布过 {{ user.comments.count() }} 条评论.</p>
 
         <p>
             {% if current_user.can(Permission.FOLLOW) and user != current_user %}

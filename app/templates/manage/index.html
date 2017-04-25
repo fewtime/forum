@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+{% import "manage/_list.html" as list %}
+
+{% block title %}Forum - {{ title }}{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+    <h1>{{ title }}</h1>
+</div>
+{{ list.list(catagory, items, is_all_posts, moment) }}
+
+<div class="pagination">
+    {% if is_all %}
+    {{ macros.pagination_widget(pagination, 'manage.all_'+catagory) }}
+    {% else %}
+    {{ macros.pagination_widget(pagination, 'manage.'+catagory) }}
+    {% endif %}
+</div>
+{% endblock %}

@@ -9,7 +9,9 @@
     <a class="new-post-button" href="{{ url_for ('.new_post') }}">发布新文章</a>
     {% include '_nodes.html' %}
 </aside>
+<main>
 {% include '_posts.html' %}
+</main>
 <div class="pagination">
     {{ macros.pagination_widget(pagination, '.index') }}
 </div>
