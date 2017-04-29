@@ -9,7 +9,16 @@
             {% if catagory=='node' %}
             <th width="80%">节点名称</th>
             {% endif %}
+            {% if catagory=='user' %}
+            <th width="80%">用户名</th>
+            {% endif %}
+
+            {% if catagory=='user' %}
+            <th width="10%">上次登录时间</th>
+            {% else %}
             <th width="10%">时间</th>
+            {% endif %}
+
             <th width="5%">编辑</th>
             <th width="5%">删除</th>
         </tr>
@@ -26,8 +35,19 @@
                 {{ item.name }}
             </a>
             {% endif %}
+            {% if catagory=='user' %}
+            <a href="{{ url_for('main.user', username=item.username) }}">
+                {{ item.username }}
+            </a>
+            {% endif %}
         </td>
+
+        {% if catagory=='user' %}
+        <td width="10%">{{ moment(item.last_seen).format('L') }}</td>
+        {% else %}
         <td width="10%">{{ moment(item.timestamp).format('L') }}</td>
+        {% endif %}
+
         <td width="10%"><a href="{{ url_for('manage.'+catagory+'_edit', id=item.id) }}" class="btn btn-default">编辑</a></td>
         {% if item.disabled %}
         <td width="10%"><a href="{{ url_for('manage.'+catagory+'_recovery', id=item.id) }}" class="btn btn-default ">恢复</a></td>

@@ -2,9 +2,9 @@ from flask import render_template, redirect, abort, flash, url_for, \
     request, current_app, make_response
 from flask_login import login_required, current_user
 from . import manage
-from .forms import PostForm, NodeForm
+from .forms import PostForm, NodeForm, EditProfileAdminForm
 from .. import db
-from ..models import Permission, User, Post, Node, Comment
+from ..models import Permission, User, Post, Node, Comment, Role
 from ..decorators import admin_required, permission_required
 
 
@@ -139,6 +139,22 @@ def all_node():
                            catagory="node", is_all=True)
 
 
+@manage.route('/node/create-new-node', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def new_node():
+    if not current_user.can(Permission.ADMINISTER):
+        abort(403)
+    form = NodeForm()
+    if form.validate_on_submit():
+        node = Node(name=form.name.data,
+                    intro=form.intro.data,
+                    author_id=current_user.id)
+        db.session.add(node)
+        return redirect(url_for('manage.all_node'))
+    return render_template('manage/new_node.html', form=form)
+
+
 @manage.route('/node/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -183,3 +199,68 @@ def node_recovery(id):
     db.session.add(node)
     flash(u'你的节点已经恢复')
     return redirect(url_for('manage.all_node'))
+
+
+@manage.route('/user')
+@login_required
+@admin_required
+def all_user():
+    page = request.args.get('page', 1, type=int)
+    pagination = User.query.order_by(User.username).paginate(
+        page, per_page=current_app.config['FORUM_POSTS_PER_PAGE'],
+        error_out=False)
+    user = pagination.items
+    return render_template('manage/index.html', title=u"全部用户",
+                           items=user, pagination=pagination,
+                           catagory="user", is_all=True)
+
+
+@manage.route('/user/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def user_edit(id):
+    user = User.query.get_or_404(id)
+    form = EditProfileAdminForm(user=user)
+    if form.validate_on_submit():
+        user.email = form.email.data
+        user.username = form.username.data
+        user.role = Role.query.get(form.role.data)
+        user.name = form.name.data
+        user.location = form.location.data
+        user.about_me = form.about_me.data
+        db.session.add(user)
+        flash(u'资料已经更新')
+        return redirect(url_for('main.user', username=user.username))
+    form.email.data = user.email
+    form.username.data = user.username
+    form.role.data = user.role_id
+    form.name.data = user.name
+    form.location.data = user.location
+    form.about_me.data = user.about_me
+    return render_template('manage/edit_profile.html', form=form, user=user)
+
+
+@manage.route('/user/delete/<int:id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def user_delete(id):
+    user = User.query.get_or_404(id)
+    if not current_user.can(Permission.ADMINISTER):
+        abort(403)
+    user.disabled = True
+    db.session.add(user)
+    flash(u'用户已经删除')
+    return redirect(url_for('manage.all_user'))
+
+
+@manage.route('/user/recovery/<int:id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def user_recovery(id):
+    user = User.query.get_or_404(id)
+    if not current_user.can(Permission.ADMINISTER):
+        abort(403)
+    user.disabled = False
+    db.session.add(user)
+    flash(u'用户已经恢复')
+    return redirect(url_for('manage.all_user'))

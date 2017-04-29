@@ -6,8 +6,14 @@
 
 {% block page_content %}
 <div class="page-header">
-    <h1>{{ title }}</h1>
+    <h1>
+        {{ title }}
+        {% if catagory=="node" %}
+        <a href="{{ url_for('manage.new_node') }}" class="btn btn-default pull-right">新建节点</a>
+        {% endif %}
+    </h1>
 </div>
+
 {{ list.list(catagory, items, is_all_posts, moment) }}
 
 <div class="pagination">
