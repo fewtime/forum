@@ -212,6 +212,7 @@ def show_followed():
 
 
 @main.route('/new-post', methods=['GET', 'POST'])
+@login_required
 def new_post():
     form = PostForm()
     if current_user.can(Permission.WRITE_ARTICLES) and \
