@@ -10,7 +10,16 @@
     {% include '_nodes.html' %}
 </aside>
 <main>
-{% include '_posts.html' %}
+    <form method="post" action="/search/">
+        <select id="#" name="type">
+            <option value="post">帖子</option>
+            <option value="node">节点</option>
+            <option value="user">用户</option>
+        </select>
+        <input class="search form-control" name="text" type="text" placeholder="请输入你要搜索的内容"/>
+        <button type="submit" class="search btn btn-info btn-search">搜索</button>
+    </form>
+    {% include '_posts.html' %}
 </main>
 <div class="pagination">
     {{ macros.pagination_widget(pagination, '.index') }}
@@ -21,5 +30,5 @@
 
 {% block scripts %}
 {{ super() }}
-{{pagedown.include_pagedown() }}
+{{ pagedown.include_pagedown() }}
 {% endblock %}

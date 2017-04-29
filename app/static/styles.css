@@ -149,3 +149,27 @@ a.new-post-button:hover {
     width: 100%;
     border-top: 1px solid #000;
 }
+
+select {
+    width: 10%;
+    display: inline-block;
+    height: 34px;
+    padding: 6px 12px;
+    font-size: 14px;
+    color: #555;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+    transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+}
+
+input.search {
+    display: inline-block;
+    width: 79%;
+}
+
+button.search {
+    display: inline-block;
+    width: 10%;
+}

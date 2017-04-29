@@ -39,4 +39,7 @@ def create_app(config_name):
     from .manage import manage as manage_blueprint
     app.register_blueprint(manage_blueprint, url_prefix='/manage')
 
+    from .search import search as search_blueprint
+    app.register_blueprint(search_blueprint, url_prefix='/search')
+
     return app
